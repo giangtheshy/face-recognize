@@ -1,0 +1,18 @@
+opencv-python
+# tensorflow==2.16.1
+tensorflow
+keras
+# scikit-learn
+# mtcnn
+# facenet_pytorch
+# keras-vggface 
+# keras-applications
+numpy
+opencv-python
+tf-keras
+# face_recognition
+scikit-learn
+joblib
+matplotlib
+deepface 
+uvicorn
