@@ -251,7 +251,7 @@ def process_upload_file():
         task = queue.get()
         task_id = task["task_id"]
         task_path = task["task_path"]
-        tracking_path = f"./tracking/{task["tracking_path"]}"
+        tracking_path = f"./tracking/{task['tracking_path']}"
         image_path = task["image_path"]
         frames_path = task["frames_path"]
         faces_path = task["faces_path"]
