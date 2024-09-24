@@ -54,5 +54,8 @@ async def upload_files(image: UploadFile = File(...), tracking_path:str= Form(..
         "message": "Hoàn thành xử lý video và nhận diện khuôn mặt."
     }
 
+# create tracking folder if not exist
+if not os.path.exists("tracking"):
+    os.makedirs("tracking")
 t = threading.Thread(target=process_upload_file, args=())
 t.start()

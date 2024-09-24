@@ -23,6 +23,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./tasks:/app/tasks
+      - ./tracking:/app/tracking
     ports:
       - 8000:8000
     environment:
