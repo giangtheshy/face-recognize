@@ -1,0 +1,38 @@
+services:
+  slave:
+    container_name: slave
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ./tasks:/app/tasks
+    ports:
+      - 8001:8001
+    environment:
+      - WORKER_NUMBER=3
+      - THREAD_NUMBER=20
+    command: ["uvicorn", "slave:app", "--host", "0.0.0.0", "--port", "8001","--workers","3"]
+    networks:
+      - face-x
+  master:
+    container_name: master
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ./tasks:/app/tasks
+    ports:
+      - 8000:8000
+    environment:
+      - WORKER_NUMBER=3
+      - THREAD_NUMBER=20
+      - SLAVE_URL=http://slave:8001
+    command: ["uvicorn", "master:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks:
+      - face-x
+  
+networks:
+  face-x:
+    driver: bridge

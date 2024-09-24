@@ -1,3 +1,4 @@
+import datetime
 import math
 from multiprocessing import Queue
 import threading
@@ -13,10 +14,11 @@ import dotenv
 dotenv.load_dotenv()
 NUM_WORKER = int(os.environ.get("WORKER_NUMBER", 1))
 NUM_THREAD = int(os.environ.get("THREAD_NUMBER", 1))
+SLAVE_URL = os.environ.get("SLAVE_URL", "http://localhost:8001")
 
 # URL của API slave
-SLAVE_API_URL_PROCESS_VIDEO = "http://localhost:8001/process_video"  # Thay đổi nếu cần
-SLAVE_API_URL_PROCESS_FACES = "http://localhost:8001/process_faces"  # Thay đổi nếu cần
+SLAVE_API_URL_PROCESS_VIDEO = f"{SLAVE_URL}/process_video"  # Thay đổi nếu cần
+SLAVE_API_URL_PROCESS_FACES = f"{SLAVE_URL}/process_faces"  # Thay đổi nếu cần
 
 # Thư mục lưu trữ các task
 TASKS_DIR = "tasks"
@@ -207,6 +209,7 @@ def process_upload_file():
         frames_path = task["frames_path"]
         faces_path = task["faces_path"]
         combined_faces_path = task["combined_faces_path"]
+        time_start = datetime.datetime.now().timestamp()
         
         print(f"Đang xử lý video và nhận diện khuôn mặt... Task ID: {task_id}")
         
@@ -284,10 +287,9 @@ def process_upload_file():
             if img.lower().endswith(('jpg', 'png', 'jpeg'))
         ])
 
-        # Có thể nén các hình ảnh đã xử lý lại thành một hình ảnh tổng hợp khác nếu muốn
-        # Ví dụ:
-        # compress_faces(task_id)  # Nếu cần, có thể gọi lại hàm nén với processed_faces_folder
-
+        # Tính thời gian xử lý
+        time_end = datetime.datetime.now().timestamp()
+        print(f"Đã hoàn thành xử lý tất cả các hình ảnh đã nhận diện khuôn mặt : {time_end - time_start} giây.")
         # Trả về đường dẫn đến các hình ảnh đã xử lý hoặc các thông tin cần thiết
         # Ở đây chúng ta trả về đường dẫn đến thư mục processed_faces
         if not processed_image_files:
