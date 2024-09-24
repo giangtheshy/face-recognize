@@ -2,13 +2,13 @@ import os
 import threading
 import uuid
 import shutil
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile
 from master_helper import  TASKS_DIR,queue,process_upload_file
 
 app = FastAPI()
 
 @app.post("/upload")
-async def upload_files(image: UploadFile = File(...), video: UploadFile = File(...)):
+async def upload_files(image: UploadFile = File(...), tracking_path:str= Form(...)):
     """
     Endpoint để nhận một hình ảnh và một video, xử lý video bằng các luồng và kết hợp các khuôn mặt.
 
@@ -35,14 +35,14 @@ async def upload_files(image: UploadFile = File(...), video: UploadFile = File(.
     print(f"Đã lưu hình ảnh tại {image_path}")
 
     # Lưu video
-    video_path = os.path.join(task_path, 'input_video' + os.path.splitext(video.filename)[1])
-    with open(video_path, "wb") as buffer:
-        shutil.copyfileobj(video.file, buffer)
+    # video_path = os.path.join(task_path, 'input_video' + os.path.splitext(video.filename)[1])
+    # with open(video_path, "wb") as buffer:
+    #     shutil.copyfileobj(video.file, buffer)
 
     queue.put({
         "task_id": task_id,
         "task_path": task_path,
-        "video_path": video_path,
+        "tracking_path": tracking_path,
         "image_path": image_path,
         "frames_path": frames_path,
         "faces_path": faces_path,

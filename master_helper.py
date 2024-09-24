@@ -142,7 +142,7 @@ def compress_faces(task_id: str):
             output_height=output_height
         )
 
-def call_slave_api(segment, thread_index, task_id, video_path):
+def call_slave_api(segment, thread_index, task_id):
     """
     Hàm để gọi API slave để xử lý đoạn video.
 
@@ -154,7 +154,7 @@ def call_slave_api(segment, thread_index, task_id, video_path):
     payload = {
         "start_time": segment["start_time"],
         "end_time": segment["end_time"],
-        "video_path": video_path,
+        "video_path": segment["video_path"],
         "task_id": task_id
     }
     try:
@@ -196,6 +196,53 @@ def call_process_faces_thread(image_subset, task_id):
     call_slave_process_faces_api(task_id, image_subset)
 
 
+
+def get_video_segments(video_path, NUM_WORKER):
+    print(f"Đang chia video thành các đoạn nhỏ... {video_path}")
+    # Lấy thông tin video
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        print(f"Không thể mở video {video_path}")
+        return []
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if fps == 0:
+        print(f"Không thể lấy FPS cho video {video_path}")
+        return []
+    duration = total_frames / fps
+    cap.release()
+
+    print(f"Video: {video_path}")
+    print(f"FPS: {fps}")
+    print(f"Tổng số khung hình: {total_frames}")
+    print(f"Thời lượng video: {duration} giây")
+
+    # Chia video thành các segment
+    segment_duration = duration / NUM_WORKER
+    segments = []
+    for i in range(NUM_WORKER):
+        start_time = i * segment_duration
+        end_time = (i + 1) * segment_duration if i != NUM_WORKER - 1 else duration
+        segments.append({
+            "start_time": start_time,
+            "end_time": end_time,
+            "video_path": video_path
+        })
+        print(f"Đoạn {i}: Từ {start_time} đến {end_time} giây.")
+    return segments
+
+def get_all_video_segments(folder_path, NUM_WORKER):
+    print(f"Đang tìm tất cả các video trong thư mục {folder_path}")
+    video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
+    segments = []
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if os.path.splitext(file)[1].lower() in video_extensions:
+                video_path = os.path.join(root, file)
+                video_segments = get_video_segments(video_path, NUM_WORKER)
+                segments.extend(video_segments)
+    return segments
+
 def process_upload_file():
     while True:
         if queue.qsize() == 0:
@@ -204,7 +251,7 @@ def process_upload_file():
         task = queue.get()
         task_id = task["task_id"]
         task_path = task["task_path"]
-        video_path = task["video_path"]
+        tracking_path = f"./tracking/{task["tracking_path"]}"
         image_path = task["image_path"]
         frames_path = task["frames_path"]
         faces_path = task["faces_path"]
@@ -213,34 +260,12 @@ def process_upload_file():
         
         print(f"Đang xử lý video và nhận diện khuôn mặt... Task ID: {task_id}")
         
-        print(f"Đã lưu video tại {video_path}")
-
-        # Lấy thông tin video
-        cap = cv2.VideoCapture(video_path)
-        if not cap.isOpened():
-            raise HTTPException(status_code=400, detail="Không thể mở video.")
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        duration = total_frames / fps
-        cap.release()
-
-        print(f"FPS của video: {fps}")
-        print(f"Tổng số khung hình: {total_frames}")
-        print(f"Thời lượng video: {duration} giây")
-
-        # Chia đoạn thời gian cho các luồng
-        segment_duration = duration / NUM_WORKER
-        segments = []
-        for i in range(NUM_WORKER):
-            start_time = i * segment_duration
-            end_time = (i + 1) * segment_duration if i != NUM_WORKER - 1 else duration
-            segments.append({"start_time": start_time, "end_time": end_time})
-            print(f"Đoạn {i}: Từ {start_time} đến {end_time} giây.")
+        segments = get_all_video_segments(tracking_path, NUM_WORKER)
 
         # Tạo và khởi động các luồng để gọi API slave /process_video
         threads = []
         for index, segment in enumerate(segments):
-            t = threading.Thread(target=call_slave_api, args=(segment, index, task_id, video_path))
+            t = threading.Thread(target=call_slave_api, args=(segment, index, task_id))
             threads.append(t)
             t.start()
 

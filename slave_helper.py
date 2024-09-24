@@ -81,7 +81,7 @@ def process_video_segment(thread_index, start_time_sec, end_time_sec, video_path
         return
 
     current_time_sec = start_time_sec
-
+    video_name = os.path.basename(video_path)
     while current_time_sec < end_time_sec:
         # Tính số khung hình tương ứng với thời gian hiện tại
         frame_number = int(current_time_sec * fps)
@@ -98,7 +98,7 @@ def process_video_segment(thread_index, start_time_sec, end_time_sec, video_path
         # Lưu frame vào thư mục /task_id/frames/<second>.jpg
         frames_dir = os.path.join('tasks',task_id, 'frames')
         os.makedirs(frames_dir, exist_ok=True)
-        frame_filename = os.path.join(frames_dir, f"{int(current_time_sec)}.jpg")
+        frame_filename = os.path.join(frames_dir, f"{video_name}_{int(current_time_sec)}.jpg")
         cv2.imwrite(frame_filename, frame)
 
         # Tiền xử lý khung hình để đưa vào mạng DNN
@@ -133,7 +133,7 @@ def process_video_segment(thread_index, start_time_sec, end_time_sec, video_path
                     continue
 
                 # Lưu khuôn mặt vào thư mục /task_id/faces/<second>_<index>.png
-                face_filename = os.path.join(faces_dir, f"{int(current_time_sec)}_{face_index}.png")
+                face_filename = os.path.join(faces_dir, f"{video_name}_{int(current_time_sec)}_{face_index}.png")
                 cv2.imwrite(face_filename, face)
                 face_index += 1
 
