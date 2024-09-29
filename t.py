@@ -8,21 +8,22 @@ import torch
 from ultralytics import YOLO  # Import YOLOv8 từ thư viện ultralytics
 import logging
 import threading
-import subprocess  # Import subprocess để thực thi lệnh ffmpeg
+import subprocess  # Import subprocess để thựcconda lis thi lệnh ffmpeg
 import time  # Thêm thư viện time để đo thời gian
 
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Đường dẫn đến mô hình YOLOv8 đã được huấn luyện cho phát hiện khuôn mặt
-model_name = "./model/yolov8n-face.pt"  # Đảm bảo bạn đã tải mô hình này
+model_name = "yolov8n-face.pt"  # Đảm bảo bạn đã tải mô hình này
 
 # Hàm để phát hiện khuôn mặt trong mỗi luồng
-def detect_faces(detection_queue, model_name):
+def detect_faces(detection_queue, model_name,gpu_id):
     """
     Hàm để xử lý các đường dẫn frame từ hàng đợi cho việc phát hiện khuôn mặt.
     Mỗi luồng sẽ lấy một đường dẫn frame từ hàng đợi, đọc frame, thực hiện phát hiện và lưu kết quả.
     """
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     try:
         if torch.cuda.is_available():
             logging.info(f"{threading.current_thread().name}: Sử dụng GPU để phát hiện khuôn mặt.") 
@@ -118,10 +119,14 @@ def extract_frames(video_path, task_id, detection_queue):
         # Sử dụng ffmpeg để tách frame với tốc độ 1 fps
         ffmpeg_command = [
             'ffmpeg',
-            '-i', video_path,
-            '-vf', 'fps=1',
-            os.path.join(frames_dir, 'frame_%d.jpg')
+            '-hwaccel', 'cuda',  # Sử dụng CUDA cho hardware acceleration
+            '-c:v', 'h264_cuvid',  # Chỉ định codec sử dụng CUDA để decode (nếu video là H.264)
+            '-i', video_path,  # Đường dẫn đến video input
+            '-vf', 'fps=1',  # Tách frame với tốc độ 1 FPS
+            '-c:v', 'mjpeg',  # Chỉ định codec cho file output là MJPEG
+            os.path.join(frames_dir, 'frame_%d.jpg')  # Đường dẫn lưu frame output
         ]
+
 
         # Bắt đầu đo thời gian cắt frame
         start_extract_time = time.time()
@@ -168,7 +173,7 @@ def main():
     """
     Hàm chính để xử lý tất cả các video trong thư mục.
     """
-    video_folder_path = "./tracking/v2"
+    video_folder_path = "./yolo-video"
     time_start = datetime.datetime.now().timestamp()
 
     # Kiểm tra nếu mô hình tồn tại
@@ -184,13 +189,13 @@ def main():
         logging.warning("Không tìm thấy video nào trong thư mục.")
         return
 
-    num_detection_threads = 100  # Số lượng luồng cho phát hiện khuôn mặt
+    num_detection_threads = 5  # Số lượng luồng cho phát hiện khuôn mặt
     detection_queue = Queue()
 
     # Khởi tạo các luồng phát hiện khuôn mặt
     detection_threads = []
     for i in range(num_detection_threads):
-        t = Thread(target=detect_faces, args=(detection_queue, model_name), name=f"Detection-Thread-{i+1}")
+        t = Thread(target=detect_faces, args=(detection_queue, model_name,i%4), name=f"Detection-Thread-{i+1}")
         t.start()
         detection_threads.append(t)
         logging.info(f"Đã khởi động luồng phát hiện khuôn mặt {i+1}/{num_detection_threads}.")
