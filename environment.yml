@@ -1,0 +1,39 @@
+name: giangnt
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=conda_forge
+  - _openmp_mutex=4.5=2_gnu
+  - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
+  - brotli-python=1.0.9=py38h6a678d5_8
+  - ca-certificates=2024.8.30=hbcca054_0
+  - certifi=2024.8.30=pyhd8ed1ab_0
+  - charset-normalizer=3.3.2=pyhd3eb1b0_0
+  - idna=3.7=py38h06a4308_0
+  - ld_impl_linux-64=2.40=h12ee557_0
+  - libffi=3.4.4=h6a678d5_1
+  - libgcc=14.1.0=h77fa898_1
+  - libgcc-ng=14.1.0=h69a702a_1
+  - libgomp=14.1.0=h77fa898_1
+  - libstdcxx-ng=11.2.0=h1234567_1
+  - ncurses=6.4=h6a678d5_0
+  - omegaconf=2.3.0=pyhd8ed1ab_0
+  - openssl=3.3.2=hb9d3cd8_0
+  - pip=24.2=py38h06a4308_0
+  - pysocks=1.7.1=py38h06a4308_0
+  - python=3.8.19=h955ad1f_0
+  - pyyaml=6.0.1=py38h5eee18b_0
+  - readline=8.2=h5eee18b_0
+  - requests=2.32.3=py38h06a4308_0
+  - setuptools=75.1.0=py38h06a4308_0
+  - six=1.16.0=pyhd3eb1b0_1
+  - sqlite=3.45.3=h5eee18b_0
+  - tk=8.6.14=h39e8969_0
+  - typing_extensions=4.12.2=pyha770c72_0
+  - urllib3=2.2.2=py38h06a4308_0
+  - wheel=0.44.0=py38h06a4308_0
+  - xz=5.4.6=h5eee18b_1
+  - yaml=0.2.5=h7b6447c_0
+  - zlib=1.2.13=h5eee18b_1
+prefix: /home/ubuntua5000/anaconda3/envs/giangnt
